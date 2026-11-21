@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>वार्ड 27 एडमिन पूर्वावलोकन</title>
+<meta name="robots" content="noindex"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;800&family=Noto+Sans+Devanagari:wght@400;500;700&display=swap">
+<style>
+/* Layout: navy header, filter bar, stacked response cards on phone, table on desktop */
+:root{--navy:#1b2a5e;--yellow:#f4b63c;--blue:#0077b6;--bg:#f5f1e6;--surface:#fff;--fg:#1b2a5e;--muted:#5a6690;--line:#e3dcc4;
+--g:#1e8e4a;--r:#c62828;--chip:#fdecc0;--f-d:'Mukta','Noto Sans Devanagari',system-ui,sans-serif;--f-b:'Noto Sans Devanagari','Mukta',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--navy:#0b1130;--bg:#0f1530;--surface:#19214a;--fg:#f4f0e2;--muted:#b3bbd9;--line:#2b3566;--chip:#2a3466;--blue:#4db3ea;--r:#ff7a70;color-scheme:dark}}
+:root[data-theme="dark"]{--navy:#0b1130;--bg:#0f1530;--surface:#19214a;--fg:#f4f0e2;--muted:#b3bbd9;--line:#2b3566;--chip:#2a3466;--blue:#4db3ea;--r:#ff7a70;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 16px/1.6 var(--f-b)}
+.wrap{max-width:1000px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--navy);color:#fff;margin-top:calc(-1*env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px)}
+header .wrap{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:14px}
+h1{font:800 22px/1.2 var(--f-d);margin:0}
+h1 small{display:block;color:var(--yellow);font:600 14px var(--f-d)}
+.out{border:2px solid var(--yellow);background:none;color:#fff;border-radius:999px;padding:6px 16px;font:600 14px var(--f-d);min-height:40px}
+.demo{background:var(--yellow);color:#1b2a5e;font:700 14px var(--f-d);padding:8px 0;text-align:center}
+main{padding-block:20px 40px;display:grid;gap:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.st{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.st b{display:block;font:800 30px/1.1 var(--f-d);font-variant-numeric:tabular-nums}
+.st span{color:var(--muted);font-size:14px}
+.bar{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:700px){.bar{grid-template-columns:2fr 1fr 1fr auto}}
+input,select{width:100%;min-height:46px;border:2px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);font:400 16px var(--f-b);padding:8px 12px}
+.btn{min-height:46px;border:0;border-radius:10px;background:var(--navy);color:#fff;font:700 15px var(--f-d);padding:0 18px;cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.list{display:grid;gap:10px}
+.it{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
+.it.new{border-left:6px solid var(--yellow)}
+.top{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.top b{font:700 17px var(--f-d)}
+.tag{font:700 12px var(--f-d);padding:2px 10px;border-radius:999px;background:var(--chip)}
+.tag.c{background:#fde2e0;color:#7f1d1d}.tag.s{background:#dff3e4;color:#14532d}.tag.v{background:#dbeafe;color:#1e3a8a}
+.when{margin-left:auto;color:var(--muted);font-size:13px}
+.msg{margin:8px 0 0;overflow-wrap:anywhere}
+.meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:14px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.a{border:1px solid var(--line);background:none;color:var(--fg);border-radius:8px;padding:6px 12px;font:600 13px var(--f-d);min-height:36px;cursor:pointer}
+.a.wa{background:var(--g);border-color:var(--g);color:#fff}
+.empty{text-align:center;color:var(--muted);padding:30px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;font:600 14px var(--f-d)}
+</style>
+
+<header><div class="wrap"><h1>वार्ड 27 फ़ीडबैक<small>/admin · केवल आपके लिए</small></h1><button class="out" id="out" type="button">लॉग आउट</button></div></header>
+<section class="wrap" id="login" style="padding-block:40px;max-width:420px">
+  <form id="lf" class="it" style="display:grid;gap:12px">
+    <h2 style="margin:0;font:800 22px var(--f-d)">पासवर्ड डालिए</h2>
+    <input id="pw" type="password" autocomplete="current-password" aria-label="पासवर्ड" required>
+    <button class="btn" type="submit">खोलें</button>
+    <div id="lerr" class="when" style="margin:0" role="alert"></div>
+  </form>
+</section>
+<main class="wrap" id="app" hidden>
+  <div class="stats" id="stats"></div>
+  <div class="bar">
+    <input id="q" type="search" placeholder="नाम या संदेश खोजें" aria-label="खोजें">
+    <select id="fs" aria-label="सेक्टर"><option value="">सभी सेक्टर</option><option>38-W</option><option>39</option><option>40</option></select>
+    <select id="ft" aria-label="विषय"><option value="">सभी विषय</option><option value="suggestion">सुझाव</option><option value="complaint">शिकायत</option><option value="support">समर्थन</option><option value="volunteer">स्वयंसेवक</option></select>
+    <button class="btn" id="csv" type="button">CSV कॉपी करें</button>
+  </div>
+  <div class="list" id="list"></div>
+</main>
+<div id="toast" hidden></div>
+
+<script>
+(function(){
+  var T={suggestion:["सुझाव","s"],complaint:["शिकायत","c"],support:["समर्थन","v"],volunteer:["स्वयंसेवक","s"]};
+  var D=[],PW="";
+  try{PW=sessionStorage.getItem("w27pw")||""}catch(e){}
+  var $=function(i){return document.getElementById(i)};
+  function api(path,opt){opt=opt||{};opt.headers=Object.assign({"authorization":"Bearer "+PW,"content-type":"application/json"},opt.headers||{});return fetch(path,opt).then(function(r){return r.json().then(function(j){j._s=r.status;return j})})}
+  function ago(ms){var m=Math.floor((Date.now()-ms)/60000);if(m<1)return"अभी";if(m<60)return m+" मिनट पहले";var h=Math.floor(m/60);if(h<24)return h+" घंटे पहले";return Math.floor(h/24)+" दिन पहले"}
+  function toast(t){var e=$("toast");e.textContent=t;e.hidden=false;setTimeout(function(){e.hidden=true},1800)}
+  function stats(){
+    var c=function(t){return D.filter(function(r){return r.type===t}).length};
+    $("stats").innerHTML=[["कुल",D.length],["नए",D.filter(function(r){return !r.is_read}).length],["सुझाव",c("suggestion")],["शिकायतें",c("complaint")],["स्वयंसेवक",c("volunteer")]].map(function(x){return '<div class="st"><b>'+x[1]+'</b><span>'+x[0]+'</span></div>'}).join("");
+  }
+  function waNum(p){var d=String(p||"").replace(/\D/g,"");if(d.length===10)return"91"+d;if(d.length>=11)return d;return""}
+  function render(){
+    var q=$("q").value.trim().toLowerCase(),fs=$("fs").value,ft=$("ft").value;
+    var rows=D.filter(function(r){return(!fs||r.sector===fs)&&(!ft||r.type===ft)&&(!q||((r.name||"")+" "+r.message).toLowerCase().indexOf(q)>-1)});
+    stats();var L=$("list");L.textContent="";
+    if(!rows.length){var em=document.createElement("div");em.className="empty";em.textContent=D.length?"कोई फ़ीडबैक नहीं मिला":"अभी कोई फ़ीडबैक नहीं आया है";L.appendChild(em);return}
+    rows.forEach(function(r){
+      var e=document.createElement("article");e.className="it"+(r.is_read?"":" new");
+      var tg=T[r.type]||T.suggestion;
+      e.innerHTML='<div class="top"><b></b><span class="tag"></span><span class="tag '+tg[1]+'">'+tg[0]+'</span><span class="when">'+ago(r.created_at)+'</span></div><p class="msg"></p><div class="meta"><span class="ph"></span></div><div class="acts"></div>';
+      e.querySelector("b").textContent=r.name||"नाम नहीं दिया";
+      e.querySelector(".tag").textContent=r.sector?"सेक्टर "+r.sector:"सेक्टर —";
+      e.querySelector(".msg").textContent=r.message;
+      e.querySelector(".ph").textContent="फ़ोन: "+(r.phone||"नहीं दिया");
+      var A=e.querySelector(".acts");
+      function btn(t,cls,fn){var b=document.createElement("button");b.type="button";b.className="a"+(cls?" "+cls:"");b.textContent=t;b.onclick=fn;A.appendChild(b)}
+      btn(r.is_read?"नया चिह्नित करें":"पढ़ा हुआ","",function(){var v=r.is_read?0:1;api("/api/admin/read",{method:"POST",body:JSON.stringify({id:r.id,read:v})}).then(function(j){if(j.ok){r.is_read=v;render()}})});
+      var n=waNum(r.phone);
+      if(n){var a=document.createElement("a");a.className="a wa";a.textContent="WhatsApp पर जवाब दें";a.href="https://wa.me/"+n;a.target="_blank";a.rel="noopener";a.style.textDecoration="none";a.style.display="inline-flex";a.style.alignItems="center";A.appendChild(a)}
+      var armed=false;
+      btn("हटाएँ","",function(ev){var b=ev.target;if(!armed){armed=true;b.textContent="पक्का हटाएँ?";setTimeout(function(){armed=false;b.textContent="हटाएँ"},3000);return}api("/api/admin/delete",{method:"POST",body:JSON.stringify({id:r.id})}).then(function(j){if(j.ok){D=D.filter(function(x){return x.id!==r.id});render();toast("हटा दिया")}})});
+      L.appendChild(e);
+    });
+  }
+  function load(){
+    return api("/api/admin/list").then(function(j){
+      if(j._s===401){throw new Error("401")}
+      D=j.rows||[];$("login").hidden=true;$("app").hidden=false;render();
+    });
+  }
+  $("lf").addEventListener("submit",function(ev){ev.preventDefault();PW=$("pw").value;$("lerr").textContent="";
+    load().then(function(){try{sessionStorage.setItem("w27pw",PW)}catch(e){}}).catch(function(){$("lerr").textContent="पासवर्ड गलत है";PW=""})});
+  $("out").onclick=function(){try{sessionStorage.removeItem("w27pw")}catch(e){}PW="";D=[];$("app").hidden=true;$("login").hidden=false;$("pw").value=""};
+  ["q","fs","ft"].forEach(function(i){$(i).addEventListener("input",render)});
+  $("csv").onclick=function(){
+    var q=function(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"'};
+    var s="समय,नाम,फ़ोन,सेक्टर,विषय,संदेश\n"+D.map(function(r){return[new Date(r.created_at).toLocaleString(),r.name,r.phone,r.sector,(T[r.type]||T.suggestion)[0],r.message].map(q).join(",")}).join("\n");
+    try{navigator.clipboard.writeText(s).then(function(){toast("CSV कॉपी हो गया")},function(){toast("कॉपी नहीं हो सका")})}catch(e){toast("कॉपी नहीं हो सका")}
+  };
+  setInterval(function(){if(PW&&!$("app").hidden)api("/api/admin/list").then(function(j){if(j.ok){D=j.rows;render()}})},60000);
+  if(PW)load().catch(function(){PW=""});
+})();
+</script>
+
+</html>

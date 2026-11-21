@@ -312,6 +312,7 @@ footer .box small{display:block;font-size:13px;font-weight:600}
           <option value="volunteer">स्वयंसेवक बनना है / Volunteer</option>
         </select></div>
     </div>
+    <input id="f-web" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
     <div><label for="f-msg"><span class="hi">आपका संदेश</span><span class="en">Your message</span></label><textarea id="f-msg" maxlength="1500" required></textarea></div>
     <div class="actions">
       <button class="btn fullm" type="submit" id="send"><span class="hi">फ़ीडबैक भेजें</span><span class="en">Send feedback</span></button>
@@ -449,8 +450,20 @@ footer .box small{display:block;font-size:13px;font-weight:600}
     if(!d.message){ show("err", en?"Please write your message.":"कृपया अपना संदेश लिखिए।"); return; }
     wa.href = waLink(d);
     if(!db || !uid){
-      wa.hidden = false;
-      show("err", en?"Direct sending is not available in this view. Use the WhatsApp button to send it, or call 9501-000-444.":"इस व्यू में सीधा भेजना उपलब्ध नहीं है। WhatsApp बटन से भेजिए या 9501-000-444 पर कॉल कीजिए।");
+      $("#send").disabled = true;
+      var pl = { name:d.name, phone:d.phone, sector:d.sector, type:d.type, message:d.message, website:($("#f-web")||{}).value||"" };
+      fetch("/api/feedback", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify(pl) })
+        .then(function(r){ return r.json().catch(function(){return {ok:false}}).then(function(j){ return {r:r,j:j}; }); })
+        .then(function(x){
+          if(x.j && x.j.ok){ form.reset(); wa.hidden = true; show("ok", en?"Thank you. Your feedback has reached us.":"धन्यवाद। आपका फ़ीडबैक हम तक पहुँच गया है।"); }
+          else if(x.r.status===429){ show("err", en?"Too many messages. Please try again in a few minutes.":"बहुत ज़्यादा संदेश भेजे गए। कृपया कुछ मिनट बाद कोशिश करें।"); }
+          else throw new Error("fail");
+        })
+        .catch(function(){
+          wa.hidden = false;
+          show("err", en?"Could not send directly. Use the WhatsApp button to send it, or call 9501-000-444.":"सीधा भेज नहीं पाए। WhatsApp बटन से भेजिए या 9501-000-444 पर कॉल कीजिए।");
+        })
+        .then(function(){ $("#send").disabled=false; });
       return;
     }
     $("#send").disabled = true;

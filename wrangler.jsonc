@@ -1,5 +1,8 @@
 {
   "name": "ward27-campaign",
+  "main": "dist/worker.js",
   "compatibility_date": "2025-01-01",
-  "assets": { "directory": "./public" }
+  "d1_databases": [
+    { "binding": "DB", "database_name": "ward27-feedback", "database_id": "52648989-e4e0-4c05-86a9-736371beca42" }
+  ]
 }
