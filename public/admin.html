@@ -6,6 +6,7 @@
 <title>वार्ड 27 एडमिन पूर्वावलोकन</title>
 <meta name="robots" content="noindex"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;800&family=Noto+Sans+Devanagari:wght@400;500;700&display=swap">
 <style>
+[hidden]{display:none!important}
 /* Layout: navy header, filter bar, stacked response cards on phone, table on desktop */
 :root{--navy:#1b2a5e;--yellow:#f4b63c;--blue:#0077b6;--bg:#f5f1e6;--surface:#fff;--fg:#1b2a5e;--muted:#5a6690;--line:#e3dcc4;
 --g:#1e8e4a;--r:#c62828;--chip:#fdecc0;--f-d:'Mukta','Noto Sans Devanagari',system-ui,sans-serif;--f-b:'Noto Sans Devanagari','Mukta',system-ui,sans-serif}
@@ -113,7 +114,7 @@ input,select{width:100%;min-height:46px;border:2px solid var(--line);border-radi
   }
   $("lf").addEventListener("submit",function(ev){ev.preventDefault();PW=$("pw").value;$("lerr").textContent="";
     load().then(function(){try{sessionStorage.setItem("w27pw",PW)}catch(e){}}).catch(function(){$("lerr").textContent="पासवर्ड गलत है";PW=""})});
-  $("out").onclick=function(){try{sessionStorage.removeItem("w27pw")}catch(e){}PW="";D=[];$("app").hidden=true;$("login").hidden=false;$("pw").value=""};
+  $("out").onclick=function(){try{sessionStorage.removeItem("w27pw")}catch(e){}PW="";D=[];$("list").textContent="";$("stats").textContent="";$("q").value="";$("app").hidden=true;$("login").hidden=false;$("pw").value=""};
   ["q","fs","ft"].forEach(function(i){$(i).addEventListener("input",render)});
   $("csv").onclick=function(){
     var q=function(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"'};
