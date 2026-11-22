@@ -194,6 +194,18 @@ footer .box small{display:block;font-size:13px;font-weight:600}
   .dock .d2{background:#1e8e4a;color:#fff}
   .dock svg{width:20px;height:20px;fill:currentColor}
 }
+
+.vs{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;margin-top:24px;display:grid;gap:14px;min-width:0}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tabs button{min-height:46px;border:2px solid var(--line);background:var(--bg);color:var(--fg);border-radius:12px;font:700 15px var(--f-disp);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.vres{display:grid;gap:12px}
+.vc{background:var(--bg);border:2px solid var(--yellow);border-radius:14px;padding:14px 16px;min-width:0;overflow-wrap:anywhere}
+.vc h3{font-size:22px}
+.vc dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:10px 0 0}
+.vc dt{color:var(--muted);font-size:14px}.vc dd{margin:0;font-weight:600}
+.vc .big{font:800 26px/1.1 var(--f-disp);color:var(--blue)}
+.ext{display:flex;gap:10px;flex-wrap:wrap}
 @media (prefers-reduced-motion:no-preference){.btn,.sh{transition:transform .15s}.btn:hover,.sh:hover{transform:translateY(-2px)}}
 </style>
 
@@ -207,6 +219,7 @@ footer .box small{display:block;font-size:13px;font-weight:600}
 </header>
 <nav class="nav" aria-label="Sections">
   <div class="wrap">
+    <a href="#vote"><span class="hi">अपना वोट खोजें</span><span class="en">Find your vote</span></a>
     <a href="#promises"><span class="hi">वायदे</span><span class="en">Promises</span></a>
     <a href="#work"><span class="hi">अब तक के कार्य</span><span class="en">Our work</span></a>
     <a href="#articles"><span class="hi">लेख</span><span class="en">Articles</span></a>
@@ -240,6 +253,34 @@ footer .box small{display:block;font-size:13px;font-weight:600}
   <span class="hi">सर्वपक्षीय विकास और खुशबूदार ज़िंदगानी होगी। चमक उठेगा वार्ड अगर आपकी मेहरबानी होगी।</span>
   <span class="en">All-round development and a fragrant, happy life. The ward will shine, with your blessing.</span>
 </div></div>
+
+<section id="vote" style="padding-block:44px 8px"><div class="wrap">
+  <div class="eyebrow"><span class="hi">मतदाता सहायता</span><span class="en">Voter help</span></div>
+  <h2 class="sec"><span class="hi">अपना वोट खोजिए</span><span class="en">Find your vote</span></h2>
+  <p class="lead"><span class="hi">अपना भाग संख्या, क्रम संख्या और मतदान केंद्र जानिए।</span><span class="en">Look up your part number, serial number and polling booth.</span></p>
+  <div class="vs">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-epic" aria-selected="true"><span class="hi">वोटर आईडी (EPIC) से</span><span class="en">By voter ID (EPIC)</span></button>
+      <button type="button" role="tab" id="tab-name" aria-selected="false"><span class="hi">नाम से</span><span class="en">By name</span></button>
+    </div>
+    <form id="vform" novalidate style="display:grid;gap:12px">
+      <div id="v-epic"><label for="v-e"><span class="hi">वोटर आईडी नंबर</span><span class="en">Voter ID number</span></label><input id="v-e" autocomplete="off" autocapitalize="characters" maxlength="20"></div>
+      <div id="v-name" hidden style="display:grid;gap:12px">
+        <div><label for="v-n"><span class="hi">आपका नाम</span><span class="en">Your name</span></label><input id="v-n" autocomplete="off" maxlength="60"></div>
+        <div><label for="v-r"><span class="hi">पिता / पति का नाम</span><span class="en">Father / husband name</span></label><input id="v-r" autocomplete="off" maxlength="60"></div>
+        <div><label for="v-s"><span class="hi">सेक्टर (वैकल्पिक)</span><span class="en">Sector (optional)</span></label>
+          <select id="v-s"><option value="">सभी / All</option><option value="38-W">38-W</option><option value="39">39</option><option value="40">40</option></select></div>
+      </div>
+      <button class="btn fullm" type="submit" id="vgo"><span class="hi">खोजें</span><span class="en">Search</span></button>
+    </form>
+    <div id="vstat" role="status" hidden></div>
+    <div class="vres" id="vres"></div>
+    <p class="note"><span class="hi">आपकी जानकारी सिर्फ़ खोज के लिए इस्तेमाल होती है, सेव नहीं की जाती। आधिकारिक जाँच के लिए:</span><span class="en">Your search is not saved. For official verification:</span></p>
+    <div class="ext">
+      <a class="btn alt sm" style="border:2px solid var(--line)" href="https://electoralsearch.eci.gov.in/" target="_blank" rel="noopener"><span class="hi">चुनाव आयोग पर खोजें</span><span class="en">Search on ECI</span></a>
+    </div>
+  </div>
+</div></section>
 
 <section id="promises"><div class="wrap">
   <div class="eyebrow"><span class="hi">हमारे वायदे</span><span class="en">Our promises</span></div>
@@ -495,6 +536,48 @@ footer .box small{display:block;font-size:13px;font-weight:600}
       list.appendChild(it);
     });
   }
+
+  /* ---- voter search ---- */
+  (function(){
+    var mode="epic";
+    var tE=$("#tab-epic"), tN=$("#tab-name");
+    function setMode(m){ mode=m; tE.setAttribute("aria-selected",m==="epic"); tN.setAttribute("aria-selected",m==="name"); $("#v-epic").hidden=m!=="epic"; $("#v-name").hidden=m!=="name"; $("#vres").textContent=""; $("#vstat").hidden=true; }
+    tE.addEventListener("click",function(){setMode("epic")}); tN.addEventListener("click",function(){setMode("name")});
+    function vs(kind,msg){ var e=$("#vstat"); e.hidden=false; e.className="msg "+kind; e.textContent=msg; }
+    function row(dl,k,v){ if(!v) return; var a=document.createElement("dt"); a.textContent=k; var b=document.createElement("dd"); b.textContent=v; dl.appendChild(a); dl.appendChild(b); }
+    $("#vform").addEventListener("submit",function(ev){
+      ev.preventDefault(); $("#vres").textContent=""; $("#vstat").hidden=true;
+      var body={};
+      if(mode==="epic"){ body.epic=$("#v-e").value.trim(); if(!body.epic){ vs("err",en?"Enter your voter ID number.":"वोटर आईडी नंबर लिखिए।"); return; } }
+      else { body.name=$("#v-n").value.trim(); body.relative=$("#v-r").value.trim(); body.sector=$("#v-s").value;
+        if(body.name.length<3||body.relative.length<2){ vs("err",en?"Enter your name and your father or husband name.":"अपना नाम और पिता/पति का नाम लिखिए।"); return; } }
+      $("#vgo").disabled=true;
+      fetch("/api/voters/search",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)})
+        .then(function(r){ return r.json().catch(function(){return {}}).then(function(j){ j._s=r.status; return j; }); })
+        .then(function(j){
+          if(j._s===429){ vs("err",en?"Too many searches. Try again in a few minutes.":"बहुत ज़्यादा खोज हो गईं। कुछ मिनट बाद कोशिश करें।"); return; }
+          if(!j.ok){ vs("err",en?"Could not search. Please try again.":"खोज नहीं हो सकी। दोबारा कोशिश करें।"); return; }
+          if(j.loaded===false){ vs("err",en?"The local list is not available yet. Please use the ECI link below.":"मतदाता सूची अभी उपलब्ध नहीं है। कृपया नीचे चुनाव आयोग का लिंक इस्तेमाल करें।"); return; }
+          if(!j.rows.length){ vs("err",en?"No match found. Check the spelling or search on ECI below.":"कोई नतीजा नहीं मिला। वर्तनी जाँचिए या नीचे चुनाव आयोग पर खोजिए।"); return; }
+          j.rows.forEach(function(r){
+            var c=document.createElement("div"); c.className="vc";
+            var h=document.createElement("h3"); h.textContent=r.name; c.appendChild(h);
+            var dl=document.createElement("dl");
+            row(dl,en?"Father/Husband":"पिता/पति",r.relative);
+            row(dl,en?"Age / Gender":"आयु / लिंग",[r.age,r.gender].filter(Boolean).join(" / "));
+            row(dl,en?"Sector":"सेक्टर",r.sector);
+            row(dl,en?"Part no.":"भाग संख्या",r.part);
+            row(dl,en?"Serial no.":"क्रम संख्या",r.serial);
+            row(dl,en?"Polling booth":"मतदान केंद्र",r.booth);
+            row(dl,en?"Booth address":"केंद्र का पता",r.booth_address);
+            c.appendChild(dl); $("#vres").appendChild(c);
+          });
+        })
+        .catch(function(){ vs("err",en?"Could not search. Please try again.":"खोज नहीं हो सकी। दोबारा कोशिश करें।"); })
+        .then(function(){ $("#vgo").disabled=false; });
+    });
+    $("#v-name").hidden=true;
+  })();
 
   applyLang();
   if(window.claude && claude.use){

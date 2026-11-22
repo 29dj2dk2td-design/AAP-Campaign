@@ -66,6 +66,15 @@ input,select{width:100%;min-height:46px;border:2px solid var(--line);border-radi
     <button class="btn" id="csv" type="button">CSV कॉपी करें</button>
   </div>
   <div class="list" id="list"></div>
+  <section class="it" id="vimp" style="display:grid;gap:10px">
+    <h2 style="margin:0;font:800 20px var(--f-d)">मतदाता सूची आयात (वोट खोजें के लिए)</h2>
+    <p class="msg" style="margin:0">अभी सूची में: <b id="vcount">…</b> मतदाता</p>
+    <p class="meta" style="margin:0">CSV की पहली पंक्ति में ये कॉलम नाम अंग्रेज़ी में हों: <code>epic,name,relative,age,gender,house,sector,part,serial,booth,booth_address</code>। सिर्फ़ <code>name</code> ज़रूरी है।</p>
+    <input id="vfile" type="file" accept=".csv,text/csv" aria-label="CSV फ़ाइल">
+    <label style="display:flex;gap:8px;align-items:center"><input id="vrep" type="checkbox" style="width:auto;min-height:0" checked> पुरानी सूची हटाकर नई डालें</label>
+    <div class="acts"><button class="btn" id="vgo" type="button">आयात करें</button><button class="a" id="vclr" type="button">पूरी सूची हटाएँ</button></div>
+    <div id="vmsg" class="when" style="margin:0" role="status"></div>
+  </section>
 </main>
 <div id="toast" hidden></div>
 
@@ -108,9 +117,49 @@ input,select{width:100%;min-height:46px;border:2px solid var(--line);border-radi
   function load(){
     return api("/api/admin/list").then(function(j){
       if(j._s===401){throw new Error("401")}
-      D=j.rows||[];$("login").hidden=true;$("app").hidden=false;render();
+      D=j.rows||[];$("login").hidden=true;$("app").hidden=false;render();vcount();
     });
   }
+
+  /* ---- voter list import ---- */
+  function parseCSV(t){
+    var rows=[],r=[],f="",q=false,i=0;
+    t=t.replace(/^\uFEFF/,"");
+    for(;i<t.length;i++){var c=t[i];
+      if(q){ if(c==='"'){ if(t[i+1]==='"'){f+='"';i++} else q=false } else f+=c }
+      else if(c==='"') q=true;
+      else if(c===","){ r.push(f);f="" }
+      else if(c==="\n"||c==="\r"){ if(c==="\r"&&t[i+1]==="\n")i++; r.push(f);f=""; if(r.length>1||r[0]!=="")rows.push(r); r=[] }
+      else f+=c }
+    if(f!==""||r.length){r.push(f);rows.push(r)}
+    return rows;
+  }
+  function vcount(){api("/api/admin/voters/count").then(function(j){if(j.ok)$("vcount").textContent=j.count})}
+  $("vgo").onclick=function(){
+    var file=$("vfile").files[0],m=$("vmsg");
+    if(!file){m.textContent="पहले CSV फ़ाइल चुनिए";return}
+    var fr=new FileReader();
+    fr.onload=function(){
+      var all=parseCSV(String(fr.result)),head=all.shift()||[];
+      head=head.map(function(x){return x.trim().toLowerCase()});
+      if(head.indexOf("name")<0){m.textContent="कॉलम 'name' नहीं मिला";return}
+      var data=all.map(function(r){var o={};head.forEach(function(k,i){o[k]=r[i]});return o}).filter(function(o){return o.name});
+      if(!data.length){m.textContent="फ़ाइल में कोई पंक्ति नहीं मिली";return}
+      $("vgo").disabled=true;var done=0,first=$("vrep").checked;
+      (function next(){
+        if(done>=data.length){m.textContent=data.length+" मतदाता जोड़े गए";$("vgo").disabled=false;vcount();return}
+        var chunk=data.slice(done,done+50);
+        api("/api/admin/voters/import",{method:"POST",body:JSON.stringify({rows:chunk,replace:first})}).then(function(j){
+          if(!j.ok){throw new Error("x")}
+          first=false;done+=chunk.length;m.textContent=done+" / "+data.length+" जोड़े गए…";next();
+        }).catch(function(){m.textContent="आयात बीच में रुक गया ("+done+" जुड़े)। दोबारा कोशिश करें।";$("vgo").disabled=false;vcount()});
+      })();
+    };
+    fr.readAsText(file,"utf-8");
+  };
+  var armedClr=false;
+  $("vclr").onclick=function(){var b=$("vclr");if(!armedClr){armedClr=true;b.textContent="पक्का हटाएँ?";setTimeout(function(){armedClr=false;b.textContent="पूरी सूची हटाएँ"},3000);return}
+    api("/api/admin/voters/clear",{method:"POST",body:"{}"}).then(function(j){if(j.ok){$("vmsg").textContent="सूची हटा दी गई";vcount()}})};
   function showLogin(){D=[];$("list").textContent="";$("stats").textContent="";$("q").value="";$("app").hidden=true;$("login").hidden=false;$("pw").value=""}
   $("lf").addEventListener("submit",function(ev){ev.preventDefault();$("lerr").textContent="";
     api("/api/admin/login",{method:"POST",body:JSON.stringify({password:$("pw").value})}).then(function(j){
