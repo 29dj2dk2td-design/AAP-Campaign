@@ -260,18 +260,22 @@ footer .box small{display:block;font-size:13px;font-weight:600}
 <section id="vote" style="padding-block:44px 8px"><div class="wrap">
   <div class="eyebrow"><span class="hi">मतदाता सहायता</span><span class="en">Voter help</span></div>
   <h2 class="sec"><span class="hi">अपना वोट खोजिए</span><span class="en">Find your vote</span></h2>
-  <p class="lead"><span class="hi">अपना भाग संख्या, क्रम संख्या और मतदान केंद्र जानिए।</span><span class="en">Look up your part number, serial number and polling booth.</span></p>
+  <p class="lead"><span class="hi">अपना नाम और आयु लिखकर अपना भाग संख्या जानिए।</span><span class="en">Enter your name and age to find your part number.</span></p>
   <div class="vs">
-    <div class="tabs" role="tablist">
-      <button type="button" role="tab" id="tab-epic" aria-selected="true"><span class="hi">वोटर आईडी (EPIC) से</span><span class="en">By voter ID (EPIC)</span></button>
-      <button type="button" role="tab" id="tab-name" aria-selected="false"><span class="hi">नाम से</span><span class="en">By name</span></button>
+    <div class="tabs" role="tablist" hidden>
+      <button type="button" role="tab" id="tab-epic" aria-selected="false"><span class="hi">वोटर आईडी (EPIC) से</span><span class="en">By voter ID (EPIC)</span></button>
+      <button type="button" role="tab" id="tab-name" aria-selected="true"><span class="hi">नाम से</span><span class="en">By name</span></button>
     </div>
     <form id="vform" novalidate style="display:grid;gap:12px">
-      <div id="v-epic"><label for="v-e"><span class="hi">वोटर आईडी नंबर</span><span class="en">Voter ID number</span></label><input id="v-e" autocomplete="off" autocapitalize="characters" maxlength="20"></div>
-      <div id="v-name" hidden style="display:grid;gap:12px">
+      <div id="v-epic" hidden><label for="v-e"><span class="hi">वोटर आईडी नंबर</span><span class="en">Voter ID number</span></label><input id="v-e" autocomplete="off" autocapitalize="characters" maxlength="20"></div>
+      <div id="v-name" style="display:grid;gap:12px">
         <div><label for="v-n"><span class="hi">आपका नाम</span><span class="en">Your name</span></label><input id="v-n" autocomplete="off" maxlength="60"></div>
-        <div><label for="v-r"><span class="hi">पिता / पति का नाम</span><span class="en">Father / husband name</span></label><input id="v-r" autocomplete="off" maxlength="60"></div>
-        <div><label for="v-s"><span class="hi">सेक्टर (वैकल्पिक)</span><span class="en">Sector (optional)</span></label>
+        <div class="row">
+          <div><label for="v-a"><span class="hi">आयु (लगभग)</span><span class="en">Age (approx.)</span></label><input id="v-a" inputmode="numeric" maxlength="3" autocomplete="off"></div>
+          <div><label for="v-p"><span class="hi">भाग संख्या (वैकल्पिक)</span><span class="en">Part no. (optional)</span></label><input id="v-p" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+        </div>
+        <div id="v-rel" hidden><label for="v-r"><span class="hi">पिता / पति का नाम</span><span class="en">Father / husband name</span></label><input id="v-r" autocomplete="off" maxlength="60"></div>
+        <div id="v-sec" hidden><label for="v-s"><span class="hi">सेक्टर (वैकल्पिक)</span><span class="en">Sector (optional)</span></label>
           <select id="v-s"><option value="">सभी / All</option><option value="38-W">38-W</option><option value="39">39</option><option value="40">40</option></select></div>
       </div>
       <button class="btn fullm" type="submit" id="vgo"><span class="hi">खोजें</span><span class="en">Search</span></button>
@@ -542,7 +546,7 @@ footer .box small{display:block;font-size:13px;font-weight:600}
 
   /* ---- voter search ---- */
   (function(){
-    var mode="epic";
+    var mode="name";
     var tE=$("#tab-epic"), tN=$("#tab-name");
     function setMode(m){ mode=m; tE.setAttribute("aria-selected",m==="epic"); tN.setAttribute("aria-selected",m==="name"); $("#v-epic").hidden=m!=="epic"; $("#v-name").hidden=m!=="name"; $("#vres").textContent=""; $("#vstat").hidden=true; }
     tE.addEventListener("click",function(){setMode("epic")}); tN.addEventListener("click",function(){setMode("name")});
@@ -552,8 +556,9 @@ footer .box small{display:block;font-size:13px;font-weight:600}
       ev.preventDefault(); $("#vres").textContent=""; $("#vstat").hidden=true;
       var body={};
       if(mode==="epic"){ body.epic=$("#v-e").value.trim(); if(!body.epic){ vs("err",en?"Enter your voter ID number.":"वोटर आईडी नंबर लिखिए।"); return; } }
-      else { body.name=$("#v-n").value.trim(); body.relative=$("#v-r").value.trim(); body.sector=$("#v-s").value;
-        if(body.name.length<3||body.relative.length<2){ vs("err",en?"Enter your name and your father or husband name.":"अपना नाम और पिता/पति का नाम लिखिए।"); return; } }
+      else { body.name=$("#v-n").value.trim(); body.relative=$("#v-r").value.trim(); body.sector=$("#v-s").value; body.age=$("#v-a").value.trim(); body.part=$("#v-p").value.trim();
+        var ageOk=/^\d{2,3}$/.test(body.age);
+        if(body.name.length<2||(!ageOk&&body.relative.length<2)){ vs("err",en?"Enter your name and your age.":"अपना नाम और आयु लिखिए।"); return; } }
       $("#vgo").disabled=true;
       fetch("/api/voters/search",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)})
         .then(function(r){ return r.json().catch(function(){return {}}).then(function(j){ j._s=r.status; return j; }); })
@@ -562,6 +567,7 @@ footer .box small{display:block;font-size:13px;font-weight:600}
           if(!j.ok){ vs("err",en?"Could not search. Please try again.":"खोज नहीं हो सकी। दोबारा कोशिश करें।"); return; }
           if(j.loaded===false){ vs("err",en?"The local list is not available yet. Please use the ECI link below.":"मतदाता सूची अभी उपलब्ध नहीं है। कृपया नीचे चुनाव आयोग का लिंक इस्तेमाल करें।"); return; }
           if(!j.rows.length){ vs("err",en?"No match found. Check the spelling or search on ECI below.":"कोई नतीजा नहीं मिला। वर्तनी जाँचिए या नीचे चुनाव आयोग पर खोजिए।"); return; }
+          if(j.total>j.rows.length){ vs("ok",en?("Showing "+j.rows.length+" of "+j.total+" matches. Add your part number to narrow it down."):(j.total+" में से "+j.rows.length+" नतीजे दिखाए गए। सीमित करने के लिए भाग संख्या भरिए।")); }
           j.rows.forEach(function(r){
             var c=document.createElement("div"); c.className="vc";
             var h=document.createElement("h3"); h.textContent=r.name; c.appendChild(h);
@@ -576,10 +582,14 @@ footer .box small{display:block;font-size:13px;font-weight:600}
             c.appendChild(dl); $("#vres").appendChild(c);
           });
         })
-        .catch(function(){ vs("err",en?"Could not search. Please try again.":"खोज नहीं हो सकी। दोबारा कोशिश करें।"); })
+        .catch(function(e){ vs("err",en?"Could not search. Please try again.":"खोज नहीं हो सकी। दोबारा कोशिश करें।"); })
         .then(function(){ $("#vgo").disabled=false; });
     });
-    $("#v-name").hidden=true;
+    fetch("/api/voters/info").then(function(r){return r.json()}).then(function(i){
+      if(!i||!i.ok) return;
+      $("#v-rel").hidden=!i.relative; $("#v-sec").hidden=!i.sector;
+      if(i.epic){ $(".tabs").hidden=false; }
+    }).catch(function(){});
   })();
 
   applyLang();
