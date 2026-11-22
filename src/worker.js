@@ -21,13 +21,22 @@ async function same(a, b) {
 const hex = (u) => [...u].map((b) => b.toString(16).padStart(2, "0")).join("");
 const clean = (v, n) => String(v ?? "").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").trim().slice(0, n);
 
-async function authed(req, env) {
-  const given = (req.headers.get("authorization") || "").replace(/^Bearer /, "");
-  if (!given || !env.ADMIN_PASSWORD) return false;
-  if (await same(given, env.ADMIN_PASSWORD)) return true;
-  await new Promise((r) => setTimeout(r, 800));
-  return false;
+const SESSION_SECONDS = 12 * 60 * 60;
+async function sign(env, payload) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode("w27-session|" + env.ADMIN_PASSWORD), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return hex(new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload))));
 }
+function cookieOf(req, name) {
+  const m = (req.headers.get("cookie") || "").match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+  return m ? m[1] : "";
+}
+async function authed(req, env) {
+  if (!env.ADMIN_PASSWORD) return false;
+  const [exp, sig] = cookieOf(req, "w27s").split(".");
+  if (!exp || !sig || Number(exp) < Date.now()) return false;
+  return same(sig, await sign(env, exp));
+}
+const cookieHeader = (v, age) => `w27s=${v}; HttpOnly; Secure; SameSite=Strict; Path=/api/admin; Max-Age=${age}`;
 
 export default {
   async fetch(req, env) {
@@ -54,6 +63,23 @@ export default {
       await env.DB.prepare("INSERT INTO feedback (name,phone,sector,type,message,created_at,ip_hash) VALUES (?,?,?,?,?,?,?)")
         .bind(clean(b.name, 80), clean(b.phone, 20), sector, type, message, now, ipHash).run();
       return json({ ok: true });
+    }
+
+    if (p === "/api/admin/login" && req.method === "POST") {
+      let b = {}; try { b = await req.json(); } catch {}
+      if (env.ADMIN_PASSWORD && typeof b.password === "string" && (await same(b.password, env.ADMIN_PASSWORD))) {
+        const exp = String(Date.now() + SESSION_SECONDS * 1000);
+        const r = json({ ok: true });
+        r.headers.append("set-cookie", cookieHeader(exp + "." + (await sign(env, exp)), SESSION_SECONDS));
+        return r;
+      }
+      await new Promise((r) => setTimeout(r, 1000));
+      return json({ ok: false, error: "unauthorized" }, 401);
+    }
+    if (p === "/api/admin/logout" && req.method === "POST") {
+      const r = json({ ok: true });
+      r.headers.append("set-cookie", cookieHeader("", 0));
+      return r;
     }
 
     if (p.startsWith("/api/admin/")) {

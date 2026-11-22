@@ -72,10 +72,9 @@ input,select{width:100%;min-height:46px;border:2px solid var(--line);border-radi
 <script>
 (function(){
   var T={suggestion:["सुझाव","s"],complaint:["शिकायत","c"],support:["समर्थन","v"],volunteer:["स्वयंसेवक","s"]};
-  var D=[],PW="";
-  try{PW=sessionStorage.getItem("w27pw")||""}catch(e){}
+  var D=[];
   var $=function(i){return document.getElementById(i)};
-  function api(path,opt){opt=opt||{};opt.headers=Object.assign({"authorization":"Bearer "+PW,"content-type":"application/json"},opt.headers||{});return fetch(path,opt).then(function(r){return r.json().then(function(j){j._s=r.status;return j})})}
+  function api(path,opt){opt=opt||{};opt.headers=Object.assign({"content-type":"application/json"},opt.headers||{});opt.credentials="same-origin";return fetch(path,opt).then(function(r){return r.json().then(function(j){j._s=r.status;return j})})}
   function ago(ms){var m=Math.floor((Date.now()-ms)/60000);if(m<1)return"अभी";if(m<60)return m+" मिनट पहले";var h=Math.floor(m/60);if(h<24)return h+" घंटे पहले";return Math.floor(h/24)+" दिन पहले"}
   function toast(t){var e=$("toast");e.textContent=t;e.hidden=false;setTimeout(function(){e.hidden=true},1800)}
   function stats(){
@@ -112,17 +111,22 @@ input,select{width:100%;min-height:46px;border:2px solid var(--line);border-radi
       D=j.rows||[];$("login").hidden=true;$("app").hidden=false;render();
     });
   }
-  $("lf").addEventListener("submit",function(ev){ev.preventDefault();PW=$("pw").value;$("lerr").textContent="";
-    load().then(function(){try{sessionStorage.setItem("w27pw",PW)}catch(e){}}).catch(function(){$("lerr").textContent="पासवर्ड गलत है";PW=""})});
-  $("out").onclick=function(){try{sessionStorage.removeItem("w27pw")}catch(e){}PW="";D=[];$("list").textContent="";$("stats").textContent="";$("q").value="";$("app").hidden=true;$("login").hidden=false;$("pw").value=""};
+  function showLogin(){D=[];$("list").textContent="";$("stats").textContent="";$("q").value="";$("app").hidden=true;$("login").hidden=false;$("pw").value=""}
+  $("lf").addEventListener("submit",function(ev){ev.preventDefault();$("lerr").textContent="";
+    api("/api/admin/login",{method:"POST",body:JSON.stringify({password:$("pw").value})}).then(function(j){
+      $("pw").value="";
+      if(!j.ok){$("lerr").textContent="पासवर्ड गलत है";return}
+      return load();
+    }).catch(function(){$("lerr").textContent="कनेक्शन में समस्या, दोबारा कोशिश करें"})});
+  $("out").onclick=function(){api("/api/admin/logout",{method:"POST",body:"{}"}).then(showLogin,showLogin)};
   ["q","fs","ft"].forEach(function(i){$(i).addEventListener("input",render)});
   $("csv").onclick=function(){
     var q=function(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"'};
     var s="समय,नाम,फ़ोन,सेक्टर,विषय,संदेश\n"+D.map(function(r){return[new Date(r.created_at).toLocaleString(),r.name,r.phone,r.sector,(T[r.type]||T.suggestion)[0],r.message].map(q).join(",")}).join("\n");
     try{navigator.clipboard.writeText(s).then(function(){toast("CSV कॉपी हो गया")},function(){toast("कॉपी नहीं हो सका")})}catch(e){toast("कॉपी नहीं हो सका")}
   };
-  setInterval(function(){if(PW&&!$("app").hidden)api("/api/admin/list").then(function(j){if(j.ok){D=j.rows;render()}})},60000);
-  if(PW)load().catch(function(){PW=""});
+  setInterval(function(){if(!$("app").hidden)api("/api/admin/list").then(function(j){if(j.ok){D=j.rows;render()}else if(j._s===401){showLogin()}})},60000);
+  load().catch(function(){});
 })();
 </script>
 
