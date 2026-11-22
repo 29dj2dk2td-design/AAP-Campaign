@@ -57,39 +57,6 @@ export default {
     if (p === "/" || p === "/index.html") return html(INDEX_HTML, { "cache-control": "no-cache" });
     if (p === "/admin" || p === "/admin/") return html(ADMIN_HTML, { "cache-control": "no-store", "x-robots-tag": "noindex" });
 
-    if (p === "/api/voters/info" && req.method === "GET") {
-      const r = await env.DB.prepare("SELECT COUNT(*) c, SUM(epic_norm<>'') e, SUM(relative<>'') r, SUM(sector<>'') s FROM voters").first();
-      return json({ ok: true, loaded: !!(r && r.c), epic: !!(r && r.e), relative: !!(r && r.r), sector: !!(r && r.s) }, 200);
-    }
-    if (p === "/api/voters/search" && req.method === "POST") {
-      let b; try { b = await req.json(); } catch { return json({ ok: false, error: "bad_json" }, 400); }
-      const total = await env.DB.prepare("SELECT COUNT(*) c FROM voters").first();
-      if (!total || !total.c) return json({ ok: true, loaded: false, rows: [] });
-      const ip = req.headers.get("cf-connecting-ip") || "";
-      const ipHash = hex(await sha("w27|" + ip)).slice(0, 16);
-      if (!(await rateOk(env, ipHash, "vsearch", 30, 10 * 60 * 1000))) return json({ ok: false, error: "slow_down" }, 429);
-      const epic = clean(b.epic, 20).toUpperCase().replace(/\s+/g, "");
-      if (epic) {
-        const rows = (await env.DB.prepare(`SELECT ${VOTER_FIELDS} FROM voters WHERE epic_norm=? LIMIT 3`).bind(epic).all()).results;
-        return json({ ok: true, loaded: true, rows, total: rows.length });
-      }
-      const name = clean(b.name, 60), rel = clean(b.relative, 60);
-      const age = parseInt(b.age);
-      const hasAge = Number.isInteger(age) && age >= 18 && age <= 120;
-      if (name.length < 2 || (!hasAge && rel.length < 2)) return json({ ok: false, error: "need_more" }, 400);
-      let where = "name LIKE ? ESCAPE '\\'";
-      const args = ["%" + likeEsc(name) + "%"];
-      if (rel.length >= 2) { where += " AND relative LIKE ? ESCAPE '\\'"; args.push("%" + likeEsc(rel) + "%"); }
-      if (hasAge) { where += " AND age BETWEEN ? AND ?"; args.push(age - 1, age + 1); }
-      const sector = ["38-W", "39", "40"].includes(b.sector) ? b.sector : "";
-      if (sector) { where += " AND (sector=? OR sector='')"; args.push(sector); }
-      const part = clean(b.part, 10);
-      if (part) { where += " AND part=?"; args.push(part); }
-      const cnt = await env.DB.prepare(`SELECT COUNT(*) c FROM voters WHERE ${where}`).bind(...args).first();
-      const rows = (await env.DB.prepare(`SELECT ${VOTER_FIELDS} FROM voters WHERE ${where} ORDER BY name LIMIT 10`).bind(...args).all()).results;
-      return json({ ok: true, loaded: true, rows, total: cnt ? cnt.c : rows.length });
-    }
-
     if (p === "/api/feedback" && req.method === "POST") {
       let b;
       try { b = await req.json(); } catch { return json({ ok: false, error: "bad_json" }, 400); }
