@@ -54,7 +54,7 @@ export default {
     const url = new URL(req.url);
     const p = url.pathname;
 
-    if (p === "/" || p === "/index.html") return html(INDEX_HTML, { "cache-control": "public, max-age=300" });
+    if (p === "/" || p === "/index.html") return html(INDEX_HTML, { "cache-control": "no-cache" });
     if (p === "/admin" || p === "/admin/") return html(ADMIN_HTML, { "cache-control": "no-store", "x-robots-tag": "noindex" });
 
     if (p === "/api/voters/search" && req.method === "POST") {
